@@ -1,0 +1,31 @@
+import serial, time, cv2, tensorflow.keras, numpy as np
+
+arduino = serial.Serial('/dev/cu.usbmodem1101', 9600)
+time.sleep(2)
+
+model = tensorflow.keras.models.load_model('keras_model.h5')
+cap = cv2.VideoCapture(0)
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    resized = cv2.resize(frame, (224, 224))
+    image = np.expand_dims(resized / 255.0, axis=0)
+    prediction = model.predict(image)
+    index = np.argmax(prediction)
+    
+    if index == 0:
+        color = "RED"
+    elif index == 1:
+        color = "GREEN"
+    else:
+        color = "BLUE"
+
+    print("Detected:", color)
+    arduino.write((color + "\n").encode())
+    time.sleep(3)  # เว้นระยะก่อนสินค้าชิ้นถัดไป
+
+cap.release()
+arduino.close()
