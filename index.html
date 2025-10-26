@@ -1,0 +1,87 @@
+#include <Servo.h>
+
+Servo servoRed;
+Servo servoGreen;
+Servo servoBlue;
+
+// กำหนดขา L298N
+#define ENA 10
+#define IN1 8
+#define IN2 9
+
+// ตัวแปรเก็บจำนวนสินค้าแต่ละสี
+int countRed = 0;
+int countGreen = 0;
+int countBlue = 0;
+
+String color = "";
+
+void setup() {
+  Serial.begin(9600);
+
+  // ตั้งค่า Servo
+  servoRed.attach(3);
+  servoGreen.attach(5);
+  servoBlue.attach(6);
+
+  // ตั้งค่ามอเตอร์สายพาน
+  pinMode(ENA, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+
+  // เริ่มต้นหมุนสายพาน
+  startConveyor();
+
+  Serial.println("System Ready...");
+}
+
+void loop() {
+  if (Serial.available()) {
+    color = Serial.readStringUntil('\n');
+    color.trim();
+
+    // หยุดสายพานเมื่อเจอสินค้า
+    stopConveyor();
+
+    if (color == "RED") {
+      countRed++;
+      servoRed.write(90);
+      delay(700);
+      servoRed.write(0);
+    } 
+    else if (color == "GREEN") {
+      countGreen++;
+      servoGreen.write(90);
+      delay(700);
+      servoGreen.write(0);
+    } 
+    else if (color == "BLUE") {
+      countBlue++;
+      servoBlue.write(90);
+      delay(700);
+      servoBlue.write(0);
+    }
+
+    // แสดงจำนวนใน Serial Monitor
+    Serial.print("RED: ");
+    Serial.print(countRed);
+    Serial.print(" | GREEN: ");
+    Serial.print(countGreen);
+    Serial.print(" | BLUE: ");
+    Serial.println(countBlue);
+
+    delay(1000);  // หน่วงเวลาปัดเสร็จ
+    startConveyor();  // ให้สายพานหมุนต่อ
+  }
+}
+
+void startConveyor() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  analogWrite(ENA, 200);  // ความเร็วปานกลาง (0-255)
+}
+
+void stopConveyor() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+}
